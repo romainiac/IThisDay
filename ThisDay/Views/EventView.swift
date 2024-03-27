@@ -15,48 +15,54 @@ struct EventView: View {
     @Query(sort: [SortDescriptor(\Event.startTime, order: .reverse)]) private var events: [Event]
     
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(events) {event in EventCell(event: event)
-                        .onTapGesture {
-                            eventToEdit = event
-                        }
-                        .swipeActions() {
-                            Button("Reset") {
-                                event.startTime = .now
+            NavigationStack() {
+                List {
+                    
+                    ForEach(events) {event in EventCell(event: event)
+                            .onTapGesture {
+                                eventToEdit = event
                             }
-                            .tint(.blue)
-                            Button("Delete") {
-                                context.delete(event)
+                            .swipeActions() {
+                                Button("Reset") {
+                                    event.startTime = .now
+                                }
+                                .tint(.blue)
+                                Button("Delete") {
+                                    context.delete(event)
+                                }
+                                .tint(.red)
                             }
-                            .tint(.red)
-                        }
+                            .listRowSeparator(.hidden)
+                    }
                 }
-            }
-            .sheet(isPresented: $isShowingItemSheet, content: {
-                AddEventSheet()
-            })
-            .sheet(item: $eventToEdit) { event in
-                UpdateEventSheet(event: event)
-                
-            }
-            .toolbar {
-                ToolbarItemGroup(placement: .bottomBar) {
-                    VStack {
-                        Button(action: {isShowingItemSheet = true}, label: {
-                            Image(systemName: "plus.circle.fill")
+                //.listStyle(.plain)
+                .listRowBackground(Color.clear)
+                .listRowSpacing(10)
+                .sheet(isPresented: $isShowingItemSheet, content: {
+                    AddEventSheet()
+                })
+                .sheet(item: $eventToEdit) { event in
+                    UpdateEventSheet(event: event)
+                    
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        VStack {
+                            Button(action: {isShowingItemSheet = true}, label: {
+                                Image(systemName: "plus.circle.fill")
+                            })
+                        }
+                        .font(.system(size: 40))
+                    }
+                }
+                .overlay {
+                    if events.isEmpty {
+                        ContentUnavailableView(label: {
+                            Label( "No Events", systemImage: "list.bullet.rectangle.portrait")
                         })
                     }
-                    .font(.system(size: 40))
                 }
-            }
-            .overlay {
-                if events.isEmpty {
-                    ContentUnavailableView(label: {
-                        Label( "No Events", systemImage: "list.bullet.rectangle.portrait")
-                    })
-                }
-            }
+            
         }
     }
     private func deleteItems(offsets: IndexSet) {
@@ -73,10 +79,17 @@ struct EventCell: View {
     let event: Event
     
     var body: some View {
-        HStack {
-            Text(event.startTime, format: .dateTime.month(.abbreviated).day())
-            Spacer()
-            Text(event.title)
+        HStack() {
+            VStack(alignment: .leading)
+            {
+                Text(event.startTime, format: .dateTime.month(.abbreviated).day())
+                Text(event.startTime, format: .dateTime.year())
+            }
+            Divider()
+            VStack(alignment: .leading) {
+                Text(event.startTime, format: .dateTime.year())
+                Text(event.title)
+            }
         }
     }
 }
