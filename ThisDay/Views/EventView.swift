@@ -78,7 +78,46 @@ struct EventCell: View {
     
     let event: Event
     
+    func getTimeDiff() -> String {
+        let timeNow = Date()
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: event.startTime, to: timeNow)
+        var timeDifference = ""
+        if let years = components.year, years > 0 {
+            timeDifference += "\(years) year"
+            if years > 1 {
+                timeDifference += "s"
+            }
+        }
+        if let months = components.month, let years = components.year, months > 0 {
+            if years > 0 {
+                timeDifference += ", "
+            }
+            timeDifference += "\(months) month"
+            if months > 1 {
+                timeDifference += "s"
+            }
+        }
+        if let days = components.day, 
+            let months = components.month,
+           let years = components.year,
+            days > 0 {
+            if months > 0 || years > 0 {
+                timeDifference += ", "
+            }
+            timeDifference += "\(days) day"
+            if days > 1 {
+                timeDifference += "s"
+            }
+        }
+        if timeDifference == "" {
+            timeDifference = "Less Than 1 Day"
+        }
+        return timeDifference
+    }
+    
     var body: some View {
+
         HStack() {
             VStack(alignment: .leading)
             {
@@ -87,8 +126,10 @@ struct EventCell: View {
             }
             Divider()
             VStack(alignment: .leading) {
-                Text(event.startTime, format: .dateTime.year())
-                Text(event.title)
+            Text(getTimeDiff())
+                    .bold()
+                    .font(.system(size: 20))
+            Text(event.title)
             }
         }
     }
@@ -166,6 +207,30 @@ struct UpdateEventSheet: View {
             
         }
     }
+}
+
+extension Date {
+
+    func isEqual(to date: Date, toGranularity component: Calendar.Component, in calendar: Calendar = .current) -> Bool {
+        calendar.isDate(self, equalTo: date, toGranularity: component)
+    }
+
+    func isInSameYear(as date: Date) -> Bool { isEqual(to: date, toGranularity: .year) }
+    func isInSameMonth(as date: Date) -> Bool { isEqual(to: date, toGranularity: .month) }
+    func isInSameWeek(as date: Date) -> Bool { isEqual(to: date, toGranularity: .weekOfYear) }
+
+    func isInSameDay(as date: Date) -> Bool { Calendar.current.isDate(self, inSameDayAs: date) }
+
+    var isInThisYear:  Bool { isInSameYear(as: Date()) }
+    var isInThisMonth: Bool { isInSameMonth(as: Date()) }
+    var isInThisWeek:  Bool { isInSameWeek(as: Date()) }
+
+    var isInYesterday: Bool { Calendar.current.isDateInYesterday(self) }
+    var isInToday:     Bool { Calendar.current.isDateInToday(self) }
+    var isInTomorrow:  Bool { Calendar.current.isDateInTomorrow(self) }
+
+    var isInTheFuture: Bool { self > Date() }
+    var isInThePast:   Bool { self < Date() }
 }
 
 #Preview {
