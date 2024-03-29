@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Event: ObservableObject {
+final class Event {
     var startTime: Date
     var title: String
     var about: String

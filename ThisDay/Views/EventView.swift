@@ -10,15 +10,17 @@ import SwiftData
 
 struct EventView: View {
     @State private var isShowingItemSheet = false
+    @State private var reload = false
     @State private var eventToEdit: Event?
     @Environment(\.modelContext) var context
     @Query(sort: [SortDescriptor(\Event.startTime, order: .reverse)]) private var events: [Event]
+    @State private var currentTime: Date = Date()
+    //@State private var filteredEvents: [Event] = []
     
     var body: some View {
             NavigationStack() {
                 List {
-                    
-                    ForEach(events) {event in EventCell(event: event)
+                    ForEach(events) {event in EventCell(currentTime: currentTime, event: event)
                             .onTapGesture {
                                 eventToEdit = event
                             }
@@ -62,6 +64,9 @@ struct EventView: View {
                         })
                     }
                 }
+                .refreshable {
+                    currentTime = Date()
+                }
             
         }
     }
@@ -76,42 +81,65 @@ struct EventView: View {
 
 struct EventCell: View {
     
+    var currentTime: Date
     let event: Event
     
     func getTimeDiff() -> String {
-        let timeNow = Date()
+        //let timeNow = Date()
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day], from: event.startTime, to: timeNow)
-        var timeDifference = ""
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: event.startTime, to: currentTime)
+        var componentList = Array<String>()
         if let years = components.year, years > 0 {
-            timeDifference += "\(years) year"
+            var part = "\(years) year"
             if years > 1 {
-                timeDifference += "s"
+                part += "s"
             }
+            componentList.append(part)
         }
-        if let months = components.month, let years = components.year, months > 0 {
-            if years > 0 {
-                timeDifference += ", "
-            }
-            timeDifference += "\(months) month"
+        if let months = components.month, months > 0 {
+            var part = "\(months) month"
             if months > 1 {
-                timeDifference += "s"
+                part += "s"
             }
+            componentList.append(part)
         }
-        if let days = components.day, 
-            let months = components.month,
-           let years = components.year,
-            days > 0 {
-            if months > 0 || years > 0 {
+        if let days = components.day, days > 0 {
+            var part = "\(days) day"
+            if days > 1 {
+                part += "s"
+            }
+            componentList.append(part)
+        }
+        if let hours = components.hour, hours > 0 {
+            var part = "\(hours) hour"
+            if hours > 1 {
+                part += "s"
+            }
+            componentList.append(part)
+        }
+        if let minutes = components.minute, minutes > 0 {
+            var part = "\(minutes) minute"
+            if minutes > 1 {
+                part += "s"
+            }
+            componentList.append(part)
+
+        }
+        if let seconds = components.second, seconds > 0 {
+            var part = "\(seconds) second"
+            if seconds > 1 {
+                part += "s"
+            }
+            componentList.append(part)
+        }
+        var timeDifference = ""
+        for index in 0..<3 {
+            if componentList.count > index {
+                timeDifference += componentList[index]
+            }
+            if componentList.count > index + 1 && index < 2 {
                 timeDifference += ", "
             }
-            timeDifference += "\(days) day"
-            if days > 1 {
-                timeDifference += "s"
-            }
-        }
-        if timeDifference == "" {
-            timeDifference = "Less Than 1 Day"
         }
         return timeDifference
     }
@@ -123,13 +151,15 @@ struct EventCell: View {
             {
                 Text(event.startTime, format: .dateTime.month(.abbreviated).day())
                 Text(event.startTime, format: .dateTime.year())
-            }
-            Divider()
+            }.frame(minWidth: 55)
+            //Spacer()
+            Divider()//.padding(.vertical,10)
+            //Spacer().frame(width: 20)
             VStack(alignment: .leading) {
-            Text(getTimeDiff())
-                    .bold()
-                    .font(.system(size: 20))
-            Text(event.title)
+                Text(event.title)
+                        .bold()
+                        .font(.system(size: 20))
+                Text(getTimeDiff())
             }
         }
     }
